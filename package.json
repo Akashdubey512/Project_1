@@ -1,0 +1,19 @@
+{
+  "name": "full_project",
+  "version": "1.0.0",
+  "description": "A full stack project",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "javascript",
+    "backened"
+  ],
+  "author": "Akash Dubey",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
