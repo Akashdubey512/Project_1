@@ -105,8 +105,9 @@ const loginUser = asyncHandler( async (req, res) => {
 // generate tokens - access and refresh
 //save refresh token in database
 //send cookie
+console.log("Login request body:", req.body);
 const{username,email,password} = req.body
-if(!username || !email){
+if(!(username || email)){
     throw new ApiError(400, "Username or email is required")
 }
 
@@ -144,7 +145,8 @@ res.status(200)
         200,
         {
             user:loggedInUser,
-            refreshToken
+            refreshToken,
+            accessToken
         },
         "User logged in successfully"
 
@@ -183,5 +185,6 @@ const logoutUser = asyncHandler( async (req, res) => {
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 }
