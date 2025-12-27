@@ -10,9 +10,18 @@ const videoSchema=new Schema(
             type:String,//cloulnary url
             required:true
         },
-        title:{
+        videoPublicId:{
             type:String,
             required:true
+        },
+        thumbnailPublicId:{
+            type:String,
+            required:true
+        },
+        title:{
+            type:String,
+            required:true,
+            trim:true,
         },
         description:{
             type:String,
@@ -20,7 +29,7 @@ const videoSchema=new Schema(
         },
         duration:{
             type:Number,//cloulnary url
-            required:true
+            default:0
         },
         views:{
             type:Number,
@@ -32,12 +41,18 @@ const videoSchema=new Schema(
         },
         owner:{
             type: Schema.Types.ObjectId,
-            ref:"User"
+            ref:"User",
+            required:true
         }
     },
 {
     timestamps:true
 }
 )
+
+videoSchema.index({ owner: 1 });//for sorting videos by user
+videoSchema.index({ createdAt: -1 });//for latest videos
+videoSchema.index({ title: "text", description: "text" });//for text search
+
 videoSchema.plugin(mongooseAggregatePaginate)
 export const Video=mongoose.model("Video",videoSchema);
