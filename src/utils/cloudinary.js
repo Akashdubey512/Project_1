@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
+import fs from "fs/promises";
 let isConfigured = false;
 const configureCloudinary = () => {
   if (isConfigured) return;
@@ -13,58 +13,41 @@ const configureCloudinary = () => {
   console.log(" Cloudinary configured successfully");
   return true;
 };
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (localFilePath, resourceType = "image") => {
+  if (!localFilePath) return null;
+
   try {
-    // Configure on first upload attempt
-    if (!isConfigured) {
-      const configured = configureCloudinary();
-      if (!configured) {
-        throw new Error("Cloudinary not configured. Check environment variables.");
-      }
-    }
-    if (!localFilePath) {
-      console.log(" No local file path provided");
-      return null;
-    }
-    // Check if file exists
-    if (!fs.existsSync(localFilePath)) {
-      console.log(` File does not exist: ${localFilePath}`);
-      return null;
-    }  
+    if (!isConfigured) configureCloudinary();
+
     const result = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto",
+      resource_type: resourceType,
     });
-    // Delete local file after upload
-    try {
-      fs.unlinkSync(localFilePath);
-      console.log(` Deleted local file: ${localFilePath}`);
-    } catch (unlinkError) {
-      console.error(`⚠️ Failed to delete local file: ${unlinkError.message}`);
-    }
-    console.log(`Uploaded to Cloudinary: ${result.url}`);
+
     return result;
   } catch (error) {
     console.error("Cloudinary upload failed:", error.message);
-    // Clean up local file if it exists
-    if (localFilePath && fs.existsSync(localFilePath)) {
-      try {
-        fs.unlinkSync(localFilePath);
-        console.log(`Cleaned up local file after failed upload: ${localFilePath}`);
-      } catch (unlinkError) {
-        console.error(`Failed to clean up local file: ${unlinkError.message}`);
-      }
-    }
     return null;
+  } finally {
+    // guaranteed cleanup (non-blocking)
+    try {
+      await fs.unlink(localFilePath);
+    } catch {
+      // ignore cleanup errors
+    }
   }
 };
 
-const deleteFromCloudinary = async (publicId) => {
+const deleteFromCloudinary = async (publicId, resourceType = "image") => {
+  if (!publicId) return null;
   try {
-    if(!publicId) return null;
-    const result = await cloudinary.uploader.destroy(publicId);
-    return result;
+    if (!isConfigured) configureCloudinary();
+
+    return await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
   } catch (error) {
     console.error("Cloudinary deletion failed:", error.message);
+    return null;
   }
-}
+};
 export { uploadOnCloudinary, deleteFromCloudinary };

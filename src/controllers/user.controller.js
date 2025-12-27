@@ -272,13 +272,24 @@ const updateUserProfileDetails = asyncHandler(async(req,res) => {
         new ApiResponse(200,updatedUser,"Profile updated successfully")
     )
 })
+// TODO: migrate to storing avatarPublicId and coverImagePublicId in User model
 
-const extractPublicId = (url) => {
-  const parts = url.split("/");
-  const uploadIndex = parts.indexOf("upload");
-  const publicIdWithExt = parts.slice(uploadIndex + 1).join("/");
-  return publicIdWithExt.replace(/\.[^/.]+$/, "");
+export const extractPublicId = (cloudinaryUrl) => {
+  if (!cloudinaryUrl) return null;
+
+  try {
+    const parts = cloudinaryUrl.split("/upload/")[1];
+    if (!parts) return null;
+
+    const withoutVersion = parts.replace(/^v\d+\//, "");
+    const publicId = withoutVersion.substring(0, withoutVersion.lastIndexOf("."));
+
+    return publicId;
+  } catch {
+    return null;
+  }
 };
+
 
 
 

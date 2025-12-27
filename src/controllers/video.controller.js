@@ -34,16 +34,15 @@ const getAllVideos = asyncHandler(async (req,res)=>{
 })
 
 const publishAVideo = async (req, res) => {
-    let videoLocalPath;
-    let thumbnailLocalPath;
-   try {
+   
      const { title, description} = req.body
      // TODO: get video, upload to cloudinary, create video
-    videoLocalPath = req.files?.videoFile[0]?.path
-    thumbnailLocalPath = req.files?.thumbnailImage[0]?.path
+    
      if (!title?.trim()) {
          throw new ApiError(400, "Title is required")
      }
+     const videoLocalPath = req.files?.videoFile[0]?.path
+    const thumbnailLocalPath = req.files?.thumbnailImage[0]?.path
  
      if(!videoLocalPath){
          throw new ApiError(400, "Video file is required")
@@ -51,16 +50,14 @@ const publishAVideo = async (req, res) => {
      if(!thumbnailLocalPath){
          throw new ApiError(400, "Thumbnail image is required")
      }
-     const videoUploadResponse = await uploadOnCloudinary(videoLocalPath, "video")
-     const thumbnailUploadResponse = await uploadOnCloudinary(thumbnailLocalPath, "image")
+     const videoUploadResponse = await uploadOnCloudinary(videoLocalPath)
+     const thumbnailUploadResponse = await uploadOnCloudinary(thumbnailLocalPath)
      if(!videoUploadResponse?.secure_url){
          throw new ApiError (500, "Failed to upload video on cloudinary")
      }
      if(!thumbnailUploadResponse?.secure_url){
          throw new ApiError (500, "Failed to upload thumbnail on cloudinary")
      }
-     fs.unlinkSync(videoLocalPath)
-     fs.unlinkSync(thumbnailLocalPath)
      const videoPublicId= videoUploadResponse.public_id
      const thumbnailPublicId= thumbnailUploadResponse.public_id
      const newVideo = await Video.create({
@@ -82,14 +79,7 @@ const publishAVideo = async (req, res) => {
          newVideo
          )
      )
-   } catch(error){
-    throw error;
-   }
-   finally {
-    if (videoLocalPath&&fs.existsSync(videoLocalPath)) fs.unlinkSync(videoLocalPath)
-    if (thumbnailLocalPath&&fs.existsSync(thumbnailLocalPath)) fs.unlinkSync(thumbnailLocalPath)
-    
-   }
+  
 }
 
 const getVideoById = asyncHandler(async (req, res) => {
