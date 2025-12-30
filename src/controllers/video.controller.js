@@ -33,7 +33,7 @@ const getAllVideos = asyncHandler(async (req,res)=>{
         ))
 })
 
-const publishAVideo = async (req, res) => {
+const publishAVideo = asyncHandler(async (req, res) => {
    
      const { title, description} = req.body
      // TODO: get video, upload to cloudinary, create video
@@ -50,12 +50,13 @@ const publishAVideo = async (req, res) => {
      if(!thumbnailLocalPath){
          throw new ApiError(400, "Thumbnail image is required")
      }
-     const videoUploadResponse = await uploadOnCloudinary(videoLocalPath)
+     const videoUploadResponse = await uploadOnCloudinary(videoLocalPath,"video")
      const thumbnailUploadResponse = await uploadOnCloudinary(thumbnailLocalPath)
      if(!videoUploadResponse?.secure_url){
          throw new ApiError (500, "Failed to upload video on cloudinary")
      }
      if(!thumbnailUploadResponse?.secure_url){
+        await deleteFromCloudinary(videoUploadResponse.public_id);
          throw new ApiError (500, "Failed to upload thumbnail on cloudinary")
      }
      const videoPublicId= videoUploadResponse.public_id
@@ -80,11 +81,106 @@ const publishAVideo = async (req, res) => {
          )
      )
   
-}
+})
 
 const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: get video by id
+     //TODO: get video by id
+    //Validate videoId
+    //Check if video exists
+    //Return video details
+    //Increment view count
+    //Add to watch history if user is logged in
+    //is user liked the video
+    //is user subscribed 
+    //total likes total views total comments 
+    //total subscriberscount
+    //Populate owner details
+    //Return response
+
+    const { videoId} = req.params
+    const user=req.user
+   
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400,"videoid is not valid");
+    }
+
+    const video=await Video.findById(videoId)
+    .populate("owner","fullName username avatar");
+
+    if(!video){
+        throw new ApiError(404,"video not found");
+    }
+
+    if(!video.isPublished){
+        if(!user){
+        throw new ApiError(403,"You are not allowed to view this video")
+        }
+
+    if (video.owner.toString() !== req.user?._id.toString()) {
+        throw new ApiError(403, "You are not allowed to view this video");
+     }   
+     }
+
+     await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc:{views:1}
+        }
+     )
+
+     if(user){
+        await user.findByIdAndUpdate(user._id,{
+            $addToSet:{watchHistory:videoId}
+        });
+     }
+
+     const totalLikes = await Likes.countDocuments({ video: videoId });
+     const totalComments = await Comment.countDocuments({ video: videoId });
+
+     let isLiked =false;
+     let isSubscribed=false;
+
+     if(user){
+        isLiked=!!(await Likes.findOne({
+            video:videoId,
+            likedBy:user._id
+        }))
+     isSubscribed = !!(await Subscription.findOne({
+      channel: video.owner._id,
+      subscriber: user._id
+    }));
+     }
+
+     const response = {
+        video:{
+            _id:videoId,
+            title:video.title,
+            description:video.description,
+            videoFile:video.videoFile,
+            thumbnail:video.thumbnail,
+            duration:video.duration,
+            views:video.views+1,
+            createdAt:video.createdAt,
+            owner:video.owner
+        },
+        stats:{
+            totalLikes,
+            totalComments
+        },
+        userState:{
+            isLiked:!!userLike,
+            isSubscribed:!!userSubscription
+        }
+     }
+
+    return res.status(200)
+    .json(
+        new ApiResponse(
+            200,
+            response,
+            "Video fetched successfully"
+        )
+    )
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
