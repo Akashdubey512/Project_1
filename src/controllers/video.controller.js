@@ -5,6 +5,7 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {deleteFromCloudinary} from "../utils/cloudinary.js"
 import fs from "fs"
 const getAllVideos = asyncHandler(async (req,res)=>{
  
@@ -184,10 +185,58 @@ const getVideoById = asyncHandler(async (req, res) => {
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: update video details like title, description, thumbnail
+    const { videoId } = req.params;
+    const { title, description } = req.body;
 
-})
+    // Validate that at least one field is being updated
+    if (!title?.trim() && !description?.trim() && !req.file) {
+        throw new ApiError(400, "At least one field (title, description, or thumbnail) is required");
+    }
+
+    // Find video and check existence
+    const video = await Video.findById(videoId);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    // Check authorization
+    if (video.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this video");
+    }
+
+    // Update fields if provided
+    if (title?.trim()) {
+        video.title = title.trim();
+    }
+    if (description?.trim()) {
+        video.description = description.trim();
+    }
+
+    // Handle thumbnail upload if present
+    if (req.file) {
+        // Delete old thumbnail from cloudinary if it exists
+        if (video.thumbnail) {
+          const thumbnail = await deleteFromCloudinary(video.thumbnailPublicId);
+            if (!thumbnail) {
+                throw new ApiError(500, "Failed to delete old thumbnail from Cloudinary");
+            }
+        }
+        const thumbnailUpload = await uploadOnCloudinary(req.file.path);
+        if(!thumbnailUpload){
+            throw new ApiError(500, "Failed to upload new thumbnail to Cloudinary");
+        }
+        video.thumbnail = thumbnailUpload.url;
+        video.thumbnailPublicId = thumbnailUpload.public_id;
+    }
+
+    await video.save({ validateBeforeSave: true });
+    const updatedVideo = video.toObject();
+    delete updatedVideo.thumbnailPublicId; 
+    return res.status(200).json(
+        new ApiResponse(200, updatedVideo, "Video updated successfully")
+    );
+});
+
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
