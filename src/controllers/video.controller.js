@@ -6,6 +6,9 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import {deleteFromCloudinary} from "../utils/cloudinary.js"
+import {Likes} from "../models/like.model.js"
+import {Comment} from "../models/comment.model.js"
+import {Subscription} from "../models/subscription.model.js"
 import fs from "fs"
 const getAllVideos = asyncHandler(async (req,res)=>{
  
@@ -169,8 +172,8 @@ const getVideoById = asyncHandler(async (req, res) => {
             totalComments
         },
         userState:{
-            isLiked:!!userLike,
-            isSubscribed:!!userSubscription
+            isLiked:!!isLiked,
+            isSubscribed:!!isSubscribed
         }
      }
 
@@ -240,7 +243,56 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    const user = req.user
     //TODO: delete video
+    if (!mongoose.Types.ObjectId.isValid(videoId)) {
+        throw new ApiError(400, "Invalid video ID format");
+    }
+
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+    if(video.owner.toString() !== user._id.toString()){
+        throw new ApiError(403,"You are not authorized to delete this video");
+    }
+
+
+ if (video.videoPublicId) {
+        try {
+            await deleteFromCloudinary(video.videoPublicId, "video");
+        } catch (error) {
+            console.error("Failed to delete video from Cloudinary:", error);
+        }
+    }
+
+     if (video.thumbnailPublicId) {
+        try {
+            await deleteFromCloudinary(video.thumbnailPublicId, "image");
+        } catch (error) {
+            console.error("Failed to delete thumbnail from Cloudinary:", error);
+        }
+    }
+
+    await Promise.allSettled([
+        Likes.deleteMany({video: videoId }),
+        Comment.deleteMany({video: videoId }),
+    ]);
+
+   try {
+        await video.deleteOne();
+    } catch (err) {
+        console.error("DB delete failed:", err);
+        throw new ApiError(500, "Failed to delete video from database");
+    }
+
+return res.status(200).json(
+    new ApiResponse(
+        200,
+        null,
+        "Video deleted successfully"
+    )
+)
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
