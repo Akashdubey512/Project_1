@@ -297,7 +297,30 @@ return res.status(200).json(
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-})
+    const user = req.user
+
+    if (!mongoose.Types.ObjectId.isValid(videoId)) {
+        throw new ApiError(400, "Invalid video ID format");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+
+    if(video.owner.toString() !== user._id.toString()){
+        throw new ApiError(403,"You are not authorized to change publish status of this video");
+    }
+const newStatus = !video.isPublished;   
+await video.updateOne({ isPublished: !video.isPublished });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { isPublished: newStatus },
+            "Video publish status updated successfully"
+        )
+    );
+});
 
 export {
     getAllVideos,
