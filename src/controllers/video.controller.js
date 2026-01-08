@@ -9,33 +9,55 @@ import {deleteFromCloudinary} from "../utils/cloudinary.js"
 import {Likes} from "../models/like.model.js"
 import {Comment} from "../models/comment.model.js"
 import {Subscription} from "../models/subscription.model.js"
-import fs from "fs"
-const getAllVideos = asyncHandler(async (req,res)=>{
- 
-     const { page = 1, limit =10, query, sortBy, sortType, userId} = req.query
-     const pageNum=parseInt(page);
-     const limitNum=parseInt(limit);
-     const skip=(page-1)*limit;
+const getAllVideos = asyncHandler(async (req, res) => {
+    const {
+        page = 1,
+        limit = 10,
+        query = "",
+        sortBy = "createdAt",
+        sortType = "desc",
+        userId
+    } = req.query;
 
-     const videos = await Video.find()
-     .skip(skip)
-     .limit(limitNum);
- 
-     const totalVideos = await Video.countDocuments();
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
 
-     res.status(200)
-     .json(new ApiResponse(
-        true,
-         "Videos fetched successfully",
-        {
-            page: pageNum,
-            limit: limitNum,
-            videos,
-            totalVideos,
-            totalPages: Math.ceil(totalVideos/limitNum)
-        }
-        ))
-})
+    const filter = {};
+
+    if (query) {
+        filter.$text = { $regex: query, $options: "i" }; 
+    }
+
+    if (userId) {
+        filter.owner = userId;
+    }
+
+    const sortOptions = {};
+    sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+
+    const videos = await Video.find(filter)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNum);
+
+    const totalVideos = await Video.countDocuments(filter);
+
+    return res.status(200).json(
+        new ApiResponse(
+            true,
+            "Videos fetched successfully",
+            {
+                page: pageNum,
+                limit: limitNum,
+                videos,
+                totalVideos,
+                totalPages: Math.ceil(totalVideos / limitNum)
+            }
+        )
+    );
+});
+
 
 const publishAVideo = asyncHandler(async (req, res) => {
    
