@@ -20,6 +20,9 @@ const playlistSchema = new Schema({
         ref:"User"
     }
 
-},{timeseries:true})
+},{timestamps:true})
+
+playlistSchema.index({ owner: 1, createdAt: -1 })
+playlistSchema.index({ videos: 1 })
 
 export const Playlist = Mongoose.model("Playlist",playlistSchema);
