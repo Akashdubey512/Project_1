@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 import {Video} from "../models/video.model.js"
 import {Subscription} from "../models/subscription.model.js"
-import {Like} from "../models/like.model.js"
+import {Likes} from "../models/like.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
@@ -36,7 +36,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
             ]),
             Video.find({ owner: channelId }).distinct("_id")
         ])
-    const totalLikes = await Like.countDocuments({ 
+    const totalLikes = await Likes.countDocuments({ 
         video: { $in: videoIds } 
     })
    return res.status(200).json(
