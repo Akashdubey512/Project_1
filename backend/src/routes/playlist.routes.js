@@ -28,5 +28,5 @@ router.route("/:playlistId")
 router.route("/:playlistId/video/:videoId")
 .post(addVideoToPlaylist)
 .delete(removeVideoFromPlaylist);
-
+export default router;
 
