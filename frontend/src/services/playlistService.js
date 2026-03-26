@@ -1,38 +1,29 @@
+import { createPlaylist } from '../../../backend/src/controllers/playlist.controller';
 import api from './api';
 
-export const playlistService = {
-    createPlaylist: async (data) => {
-        const response = await api.post('/playlists', data);
-        return response.data;
+const playlistService = {
+   createPlaylist:(data)=>{
+    return api.post('/playlists',data)
+   },
+    getUserPlaylists:(userId)=>{
+        return api.get(`/playlists/user/${userId}`)
     },
-    
-    getUserPlaylists: async (userId) => {
-        const response = await api.get(`/playlists/user/${userId}`);
-        return response.data;
+    getPlaylistById:(playlistId)=>{
+        return api.get(`/playlists/${playlistId}`)
     },
-    
-    getPlaylistById: async (playlistId) => {
-        const response = await api.get(`/playlists/${playlistId}`);
-        return response.data;
+    addVideoToPlaylist:(playlistId,videoId)=>{
+        return api.post(`/playlists/${playlistId}/video/${videoId}`)
     },
-    
-    updatePlaylist: async (playlistId, data) => {
-        const response = await api.patch(`/playlists/${playlistId}`, data);
-        return response.data;
+    removeVideoFromPlaylist:(playlistId,videoId)=>{
+        return api.delete(`/playlists/${playlistId}/video/${videoId}`)
     },
-    
-    deletePlaylist: async (playlistId) => {
-        const response = await api.delete(`/playlists/${playlistId}`);
-        return response.data;
+    deletePlaylist:(playlistId)=>{
+        return api.delete(`/playlists/${playlistId}`)
     },
-    
-    addVideoToPlaylist: async (playlistId, videoId) => {
-        const response = await api.post(`/playlists/${playlistId}/video/${videoId}`);
-        return response.data;
-    },
-    
-    removeVideoFromPlaylist: async (playlistId, videoId) => {
-        const response = await api.delete(`/playlists/${playlistId}/video/${videoId}`);
-        return response.data;
-    }
+    updatePlaylist:(playlistId,data)=>{
+        return api.patch(`/playlists/${playlistId}`,data)
+     }
+
 };
+
+export default playlistService;

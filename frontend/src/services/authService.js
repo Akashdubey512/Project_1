@@ -1,46 +1,37 @@
 import api from './api';
 
-export const authService = {
-    register: async (formData) => {
-        // formData since it includes avatar/coverImage
-        const response = await api.post('/users/register', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        return response.data;
+const authService = {
+   
+    register: (FormData)=>{
+        return api.post('/users/register', FormData)
     },
-    
-    login: async (credentials) => {
-        const response = await api.post('/users/login', credentials);
-        return response.data;
+    login:(FormData)=>{
+        return api.post('/users/login',FormData)
     },
-    
-    logout: async () => {
-        const response = await api.post('/users/logout');
-        return response.data;
+    logout:()=>{
+        return api.post('/users/logout')
     },
-    
-    getCurrentUser: async () => {
-        const response = await api.get('/users/current-user');
-        return response.data;
+    refreshToken:()=>{
+        return api.post('/users/refresh-token')
     },
-    
-    changePassword: async (passwords) => {
-        const response = await api.post('/users/change-password', passwords);
-        return response.data;
+    updateProfile:()=>{
+        return api.patch('/users/update-account',data)
     },
-    
-    updateProfile: async (details) => {
-        const response = await api.patch('/users/update-account', details);
-        return response.data;
+    changePassword:(data)=>{
+        return api.post('/users/change-password',data)
     },
-    
-    getChannelProfile: async (username) => {
-        const response = await api.get(`/users/c/${username}`);
-        return response.data;
+    updateAvatar:(formData)=>{
+        return api.patch('/users/avtar',formData)
     },
-    
-    getWatchHistory: async () => {
-        const response = await api.get('/users/history');
-        return response.data;
+    updateCoverImage:(FormData)=>{
+        return api.patch('/users/cover-image',FormData)
+    },
+    getChannelProfile:(username)=>{
+        return api.get(`/users/c/${username}`)
+    },
+    getWatchHistory:()=>{
+        return api.get('/users/history')
     }
 };
+
+export default authService

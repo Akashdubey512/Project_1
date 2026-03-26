@@ -1,14 +1,13 @@
+import { getChannelStats } from '../../../backend/src/controllers/dashboard.controller';
 import api from './api';
 
-export const dashboardService = {
-    getChannelStats: async (channelId) => {
-        // According to routes: /dashboard/stats/:channelId
-        const response = await api.get(`/dashboard/stats/${channelId}`);
-        return response.data;
+const dashboardService = {
+    getChannelStats:()=>{
+        return api.get('/dashboard/stats')
     },
-    
-    getChannelVideos: async (channelId) => {
-        const response = await api.get(`/dashboard/videos/${channelId}`);
-        return response.data;
+    getChannelVideos:(channelId)=>{
+        return api.get(`/dashboard/videos/${channelId}`)
     }
 };
+
+export default dashboardService;

@@ -1,23 +1,20 @@
+import { getLikedVideos, toggleTweetLike } from '../../../backend/src/controllers/like.controller';
 import api from './api';
 
-export const likeService = {
-    toggleVideoLike: async (videoId) => {
-        const response = await api.post(`/likes/toggle/v/${videoId}`);
-        return response.data;
-    },
-    
-    toggleCommentLike: async (commentId) => {
-        const response = await api.post(`/likes/toggle/c/${commentId}`);
-        return response.data;
-    },
-    
-    toggleTweetLike: async (tweetId) => {
-        const response = await api.post(`/likes/toggle/t/${tweetId}`);
-        return response.data;
-    },
-    
-    getLikedVideos: async () => {
-        const response = await api.get('/likes/videos');
-        return response.data;
-    }
+const likeService = {
+   toggleVideoLike:(videoId)=>{
+        return api.post(`/likes/toggle/v/${videoId}`)
+   },
+   toggleCommentLike:(commentId)=>{
+    return api.post(`/likes/toggle/c/${commentId}`)
+   },
+   toggleTweetLike:(tweetId)=>{
+    return api.post(`/likes/toggle/t/${tweetId}`)
+   },
+   getLikedVideos:()=>{
+    return api.get('/likes/videos')
+   }
+
 };
+
+export default likeService

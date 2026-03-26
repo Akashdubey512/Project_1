@@ -1,23 +1,18 @@
 import api from './api';
 
-export const tweetService = {
-    createTweet: async (content) => {
-        const response = await api.post('/tweets', { content });
-        return response.data;
+const tweetService = {
+    createTweet:(data)=>{
+        return api.post("/tweets",data);
     },
-    
-    getUserTweets: async (userId) => {
-        const response = await api.get(`/tweets/user/${userId}`);
-        return response.data;
+    getUserTweets:(userId)=>{
+        return api.get(`/tweets/user/${userId}`);
     },
-    
-    updateTweet: async (tweetId, content) => {
-        const response = await api.patch(`/tweets/${tweetId}`, { content });
-        return response.data;
+    updateTweet:(tweetId,data)=>{
+        return api.patch(`/tweets/${tweetId}`,data);
     },
-    
-    deleteTweet: async (tweetId) => {
-        const response = await api.delete(`/tweets/${tweetId}`);
-        return response.data;
+    deleteTweet:(tweetId)=>{
+        return api.delete(`/tweets/${tweetId}`);
     }
 };
+
+export default tweetService;
